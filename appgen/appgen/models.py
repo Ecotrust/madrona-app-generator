@@ -39,20 +39,22 @@ class AppConfig(models.Model):
         kml = self.public_kml
         return "/tmp/public.kml"
 
-    def command(self):
+    def get_command(self):
+        feature_cmd = "--aoi 'Test AOI' " # TODO 
+        print feature_cmd
         cmd = """create-madrona-project.py \
-            --project %(project) \
-            --app %(app) \
-            --domain %(domain) \
-            --connection %(connection) \
-            --studyregion %(wkt) \
-            --kml %(public_kml_path) \
-            %(features) 
+            --project '%(project)s' \
+            --app '%(app)s' \
+            --domain '%(domain)s' \
+            --connection "%(connection)s" \
+            --studyregion '%(wkt)s' \
+            --kml '%(public_kml_path)s' \
+            %(features)s
         """  % {'project': self.project,
                 'app': self.app,
                 'domain': self.domain,
                 'connection': self.connection,
-                'wkt': self.studyregion.wkt,
+                'wkt': self.studyregion.ewkt,
                 'public_kml_path': self.write_public_kml(),
                 'features': feature_cmd}
 
