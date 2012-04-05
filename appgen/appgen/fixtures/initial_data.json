@@ -1,0 +1,20 @@
+[
+  {
+    "pk": 1,
+    "model": "appgen.basekml",
+    "fields": {
+      "fdesc": "The sea represents the last major scientific frontier on planet earth - a place where expeditions continue to discover not only new species, but even new phyla. The role of these species in the ecosystem, where they sit in the tree of life, and how they respond to environmental changes really do constitute mysteries of the deep. Despite technological advances that now allow people to access, exploit or affect nearly all parts of the ocean, we still understand very little of the ocean's biodiversity and how it is changing under our influence.\r\n\r\nThe goal of the research presented here is to estimate and visualize, for the first time, the global impact humans are having on the ocean's ecosystems.\r\n\r\nSee http://www.nceas.ucsb.edu/globalmarine for more info",
+      "furl": "http://ebm.nceas.ucsb.edu/GlobalMarine/kml/marine_model.kml",
+      "fname": "Human Impacts on Marine Ecosystems"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "appgen.basekml",
+    "fields": {
+      "fdesc": "http://www.gis.ucar.edu/climate_change.jsp",
+      "furl": "http://www.gis.ucar.edu/kml_pages/anomalies/tas_global_A1B.kmz",
+      "fname": "Global Temperature Anomalies"
+    }
+  }
+]
