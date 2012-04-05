@@ -21,16 +21,18 @@ create-madrona-project.py \
 ```
 ### Notes
 
-* DB will already be created (blank) and dbuser existing
+* appgen database and `madrona` dbuser will be pre-created on the VM
 * connection string will be 'hardcoded'
-* No authentication
-* construct args to the create-madrona-project.py script
-* run on port 8080? Or run on desktop if gui?
-* inital app on 80 will just be a wsgi script in /usr/local/apps/example/deploy which serves a page with link to 8080
-* GET / on 8080 will check for creation of project (look at db tables and filesystem) and direct users to app (port 80)... maybe brief note about how they can restart from scratch
-* if not existing, will show a form which can be POSTed to the same URL
-* Successful POST will construct a create-madrona-project.py command, mv /usr/local/apps/example, run cmd, touch deploy/wsgi.py (the host will already be configured to look for it) and return a redirect to 80. 
-* provide some docs on how to wipe DB and filesystem to restart the process
+* The appgen project will be created by a single django admin user with a known password
+* The app will construct args to the create-madrona-project.py script
+* appgen will run on port 80
+* Newly created appconfigs will 1) create new db 2) generate code into /usr/local/apps/ 3) start gunicorn server on port xxxx
+* Port will be auto-sequenced 
+
+#### Full CRUD interface                                                               
+
+* GET / on 80 will list table of all apps with [link to edit][link to view][link to delete]
+* Single [Add App] button
 * leverage admin as much as possible
 
 ### Feature types
