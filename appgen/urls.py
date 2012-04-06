@@ -5,6 +5,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Always go to the appconfig changelist
+    url(r'^reload/(?P<pk>\d+)/$', 'appgen.views.reload', name='reload'),
     (r'^$', lambda x: HttpResponseRedirect('/admin/appgen/appconfig/')),
     (r'^admin/$', lambda x: HttpResponseRedirect('/admin/appgen/appconfig/')),
     (r'^admin/appgen/$', lambda x: HttpResponseRedirect('/admin/appgen/appconfig/')),

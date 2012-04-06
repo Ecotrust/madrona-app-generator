@@ -43,9 +43,11 @@
 
 {% block coltype %}flex{% endblock %}
 
+{% block content_title %}
+<h3 style="margin-top: 25px; margin-bottom: 25px;">Current Madrona Apps</h3>
+{% endblock %}
 {% block content %}
   <div id="content-main">
-      <h1>&nbsp;</h1>
     {% block object-tools %}
       {% if has_add_permission %}
         <ul class="object-tools">

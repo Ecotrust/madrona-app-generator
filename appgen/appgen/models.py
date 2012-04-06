@@ -62,9 +62,9 @@ class AppConfig(models.Model):
         </div>
         <br/><br/>
         <ul class="object-tools">
-            <li><a href="restart/%d/" class="tablelink"> Start/Stop </a></li>
+            <li><a href="/reload/%d/" class="tablelink"> Stop/Reload/Restart </a></li>
         </ul>
-        """
+        """ % self.pk
 
     @property
     def wms(self): 

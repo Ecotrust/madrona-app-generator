@@ -17,3 +17,11 @@ def main(request):
     })
     c = RequestContext(request, context)
     return render_to_response("form.html", c)
+
+def reload(request, pk):
+    try:
+        app = AppConfig.objects.latest('pk')
+    except AppConfig.DoesNotExist:
+        return HttpReponse("Doesnt exist", status=404)
+
+    return HttpResponse("Server restarted for %s; running on <a href='%s'>%s</a>." % (app.app, app.domain, app.domain) , status=200)
