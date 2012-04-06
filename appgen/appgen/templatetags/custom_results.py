@@ -67,6 +67,8 @@ def items_for_result(cl, result, form):
         if force_unicode(result_repr) == '':
             result_repr = mark_safe('&nbsp;')
         # If list_display_links not defined, add the link tag to the first field
+        first = False # don't auto link
+        cl.list_display_links = []
         if (first and not cl.list_display_links) or field_name in cl.list_display_links:
             table_tag = {True:'th', False:'td'}[first]
             first = False
@@ -92,7 +94,12 @@ def items_for_result(cl, result, form):
                 result_repr = mark_safe(force_unicode(bf.errors) + force_unicode(bf))
             else:
                 result_repr = conditional_escape(result_repr)
-            yield mark_safe(u'<td%s>%s</td>' % (row_class, result_repr))
+            if field_name == 'command_html':
+                yield mark_safe(u'</tr><tr class="custom-code" style="display:none"><td colspan="%s"><div class="code" >%s</div></td>' % (len(cl.list_display)-1, result_repr))
+            elif field_name == 'app':
+                yield mark_safe(u'<td%s><h3>%s</h3></td>' % (row_class, result_repr))
+            else:
+                yield mark_safe(u'<td%s>%s</td>' % (row_class, result_repr))
     if form and not form[cl.model._meta.pk.name].is_hidden:
         yield mark_safe(u'<td>%s</td>' % force_unicode(form[cl.model._meta.pk.name]))
        

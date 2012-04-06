@@ -16,7 +16,14 @@
   {{ media.css }}
     <style>
       #changelist table thead th:first-child {width: inherit}
-
+      pre
+      {
+          white-space: pre-wrap;                  /* css-3 */
+          white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+          word-wrap: break-word;                  /* Internet Explorer 5.5+ */
+          font-size: 85%;
+          width: 99%;
+      }
     </style>
 {% endblock %}
 
@@ -27,6 +34,9 @@
 <script type="text/javascript">
 (function($) {
     $(document).ready(function($) {
+        $('#togglecode').click( function() {
+            $('.custom-code').toggle();
+        });
         $("tr input.action-select").actions();
     });
 })(django.jQuery);
@@ -90,4 +100,5 @@
       </form>
     </div>
   </div>
+<a href="#" id="togglecode">toggle code</a>
 {% endblock %}

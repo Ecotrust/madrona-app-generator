@@ -21,9 +21,10 @@ class AppConfig(models.Model):
         return "exampleproject"
 
     @property
-    def features_list(self):
-        inner = ' '.join(['<li>'+f.fname+'</li>' for f in self.features.all()])
-        return '<ul>'+inner+'</ul>'
+    def data_list(self):
+        kmls = ' '.join(['<li>'+k.fname+'</li>' for k in self.kmls.all()])
+        features = ' '.join(['<li>'+f.fname+'</li>' for f in self.features.all()])
+        return '<strong>Features</strong><ul>%s</ul><strong>KMLs</strong><ul>%s</ul>' % (features, kmls)
 
     @property
     def extent(self):
@@ -42,7 +43,7 @@ class AppConfig(models.Model):
         <div style="width:100px !important;">
             <p><a href="/admin/appgen/appconfig/%d/delete/" class="deletelink"> Delete </a></p>
             <p><a href="http://%s" class="golink"> Go to App </a></p>
-            <p><a href="#" class="changelink"> Customize </a></p>
+            <p><a href="http://ecotrust.github.com/madrona/docs/tutorial.html" target="_blank" class="changelink"> Customize </a></p>
         </div>
         """ % (self.pk, self.domain)
 
@@ -55,16 +56,29 @@ class AppConfig(models.Model):
 
     @property
     def status(self):
-        # TODO
-        return """
-        <div>
-        <p>Status: <br/> Not Running <br/> (<em>12:03pm</em>)</p>
-        </div>
-        <br/><br/>
-        <ul class="object-tools">
-            <li><a href="/reload/%d/" class="tablelink"> Stop/Reload/Restart </a></li>
-        </ul>
-        """ % self.pk
+        running = False  # TODO
+        if running:
+            msg = """
+            <div>
+            <p>Status: <br/> Server is running <br/> (<em>12:03pm</em>)</p>
+            </div>
+            <br/><br/>
+            <ul class="object-tools">
+                <li><a href="/reload/%d/" class="tablelink"> Stop </a></li>
+            </ul>
+            """ % self.pk
+        else:
+            msg = """
+            <div>
+            <p>Status: <br/> Not Running <br/> (<em>12:03pm</em>)</p>
+            </div>
+            <br/><br/>
+            <ul class="object-tools">
+                <li><a href="/reload/%d/" class="tablelink"> Start </a></li>
+            </ul>
+            """ % self.pk
+            
+            return msg
 
     @property
     def wms(self): 
@@ -80,7 +94,7 @@ class AppConfig(models.Model):
         """
         TODO determine IP dynamically?
         """
-        return "%s:%d" % (self.ip, 8080)
+        return "%s:%d" % (self.ip, self.port)
 
     @property
     def port(self):
