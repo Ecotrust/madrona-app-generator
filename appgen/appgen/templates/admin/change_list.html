@@ -80,7 +80,8 @@
 
       <form id="changelist-form" action="" method="post"{% if cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %}>{% csrf_token %}
       {% block result_list %}
-          {% result_list cl %}
+        {% load custom_results %}
+        {% custom_result_list cl %}
       {% endblock %}
 
       {% block pagination %}{% pagination cl %}{% endblock %}

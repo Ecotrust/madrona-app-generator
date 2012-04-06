@@ -1,13 +1,13 @@
 from django.conf.urls import patterns, include, url
-
-
-urlpatterns = patterns('',
-    url(r'^$', 'appgen.views.main', name='main'),
-)
-
+from django.http import HttpResponseRedirect
 from django.contrib import admin
 admin.autodiscover()
-urlpatterns += patterns('',
+
+urlpatterns = patterns('',
+    # Always go to the appconfig changelist
+    (r'^$', lambda x: HttpResponseRedirect('/admin/appgen/appconfig/')),
+    (r'^admin/$', lambda x: HttpResponseRedirect('/admin/appgen/appconfig/')),
+    (r'^admin/appgen/$', lambda x: HttpResponseRedirect('/admin/appgen/appconfig/')),
     (r'^admin/', include(admin.site.urls)),
 )
 

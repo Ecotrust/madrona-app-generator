@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 
 class AppConfig(models.Model):
     app = models.CharField(verbose_name="App name", max_length=35)
+    desc = models.TextField(verbose_name="Description")
     studyregion = models.PolygonField()
     features = models.ManyToManyField('UserFeature')
     kmls = models.ManyToManyField('BaseKml')
@@ -21,11 +22,49 @@ class AppConfig(models.Model):
 
     @property
     def features_list(self):
-        return ', '.join([f.fname for f in self.features.all()])
+        inner = ' '.join(['<li>'+f.fname+'</li>' for f in self.features.all()])
+        return '<ul>'+inner+'</ul>'
 
     @property
     def extent(self):
         return self.studyregion.extent
+
+    @property
+    def links(self):
+        # TODO Probably should put this in the templatetags or a template of some sort?
+        return """
+        <style>
+        .golink {
+            padding-left: 12px;
+            background: url(/static/admin/img/icon-yes.gif) 0 .2em no-repeat;
+        }
+        </style>
+        <div style="width:100px !important;">
+            <p><a href="/admin/appgen/appconfig/%d/delete/" class="deletelink"> Delete </a></p>
+            <p><a href="http://%s" class="golink"> Go to App </a></p>
+            <p><a href="#" class="changelink"> Customize </a></p>
+        </div>
+        """ % (self.pk, self.domain)
+
+        """
+         WE DONT PROVIDE AND EDIT LINK !
+         because the code is generated once, its a one shot deal
+            <li><a href="/admin/appgen/appconfig/%d/" class="changelink"> Edit </a></li>
+        """
+
+
+    @property
+    def status(self):
+        # TODO
+        return """
+        <div>
+        <p>Status: <br/> Not Running <br/> (<em>12:03pm</em>)</p>
+        </div>
+        <br/><br/>
+        <ul class="object-tools">
+            <li><a href="restart/%d/" class="tablelink"> Start/Stop </a></li>
+        </ul>
+        """
 
     @property
     def wms(self): 
@@ -34,7 +73,7 @@ class AppConfig(models.Model):
         w = w/2
         g = self.studyregion.buffer(w)
         extent = g.extent
-        return 'http://vmap0.tiles.osgeo.org/wms/vmap0?LAYERS=basic&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/jpeg&SRS=EPSG:4326&BBOX=%s,%s,%s,%s&WIDTH=256&HEIGHT=256' % extent
+        return '<img src="http://vmap0.tiles.osgeo.org/wms/vmap0?LAYERS=basic&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/jpeg&SRS=EPSG:4326&BBOX=%s,%s,%s,%s&WIDTH=160&HEIGHT=160" width="160" height="160"/>' % extent
 
     @property
     def domain(self):
@@ -42,6 +81,11 @@ class AppConfig(models.Model):
         TODO determine IP dynamically?
         """
         return "%s:%d" % (self.ip, 8080)
+
+    @property
+    def port(self):
+        # TODO
+        return 8080
 
     @property
     def connection(self):
@@ -55,18 +99,30 @@ class AppConfig(models.Model):
         #TODO self.kmls
         return "<kml></kml>"
     
-    def get_command(self):
+    def command_html(self):
+        create = '<pre>'+self.create_command()+'</pre>'
+        db = '<pre>'+self.db_command()+'</pre>'
+        serv = '<pre>'+self.serv_command()+'</pre>'
+        return db + create + serv
+
+    def db_command(self):
+        return "createdb %s -U madrona" % self.app  # TODO slug
+
+    def serv_command(self):
+        return "python /usr/local/apps/%s/%s/manage.py runserver 0.0.0.0:%s" % (self.app, self.app, self.port)  # TODO slug
+
+    def create_command(self):
         feature_cmds = ["--%s '%s' " % (f.ftype, f.fname) for f in self.features.all()]
         feature_cmd = ' '.join(feature_cmds)
         kml_cmds = ["--kml '%s|%s' " % (k.fname, k.furl) for k in self.kmls.all()]
         kml_cmd = ' '.join(kml_cmds)
-        cmd = """create-madrona-project.py \
-            --project '%(project)s' \
-            --app '%(app)s' \
-            --domain '%(domain)s' \
-            --connection "%(connection)s" \
-            --studyregion '%(wkt)s' \
-            --kml '%(kmls)s' \
+        cmd = """create-madrona-project.py 
+            --project '%(project)s' 
+            --app '%(app)s' 
+            --domain '%(domain)s' 
+            --connection "%(connection)s" 
+            --studyregion '%(wkt)s' 
+            %(kmls)s 
             %(features)s
         """  % {'project': self.project,
                 'app': self.app,

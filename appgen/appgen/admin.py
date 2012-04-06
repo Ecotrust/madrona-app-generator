@@ -7,7 +7,7 @@ admin.site.register(BaseKml)
 
 class AppGeoModelAdmin(admin.OSMGeoAdmin): 
     form = AppConfigForm
-    list_display = ('app', 'features_list', 'wms', 'get_command')
+    list_display = ('app', 'desc', 'features_list', 'wms', 'links', 'status', 'command_html')
 
 
 admin.site.register(AppConfig, AppGeoModelAdmin)
