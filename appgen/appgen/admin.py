@@ -4,4 +4,10 @@ from appgen.forms import AppConfigForm
 
 admin.site.register(UserFeature)
 admin.site.register(BaseKml)
-admin.site.register(AppConfig, admin.GeoModelAdmin)
+
+class AppGeoModelAdmin(admin.OSMGeoAdmin): 
+    form = AppConfigForm
+    list_display = ('app', 'features_list', 'wms', 'get_command')
+
+
+admin.site.register(AppConfig, AppGeoModelAdmin)

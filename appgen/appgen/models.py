@@ -8,9 +8,33 @@ class AppConfig(models.Model):
     ip = models.IPAddressField()
     objects = models.GeoManager()
 
+    class Meta:
+        verbose_name = "Madrona App"
+        verbose_name_plural = "Madrona Apps"
+
+    def __unicode__(self):
+        return self.app
+
     @property
     def project(self):
         return "exampleproject"
+
+    @property
+    def features_list(self):
+        return ', '.join([f.fname for f in self.features.all()])
+
+    @property
+    def extent(self):
+        return self.studyregion.extent
+
+    @property
+    def wms(self): 
+        area = self.studyregion.area
+        w = area ** 0.5
+        w = w/2
+        g = self.studyregion.buffer(w)
+        extent = g.extent
+        return 'http://vmap0.tiles.osgeo.org/wms/vmap0?LAYERS=basic&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&FORMAT=image/jpeg&SRS=EPSG:4326&BBOX=%s,%s,%s,%s&WIDTH=256&HEIGHT=256' % extent
 
     @property
     def domain(self):
@@ -22,8 +46,7 @@ class AppConfig(models.Model):
     @property
     def connection(self):
         '''
-        Assumes db has already been created, postgis installed, 
-        user set up with local trust, etc
+        Assumes db has already been created, postgis installed, user set up with local trust, etc
         '''
         return "dbname='example' user='madrona'"
 
@@ -32,30 +55,25 @@ class AppConfig(models.Model):
         #TODO self.kmls
         return "<kml></kml>"
     
-    def write_public_kml(self):
-        """
-        TODO write to filesystem (mediaroot?) and return path
-        """
-        kml = self.public_kml
-        return "/tmp/public.kml"
-
     def get_command(self):
-        feature_cmd = "--aoi 'Test AOI' " # TODO 
-        print feature_cmd
+        feature_cmds = ["--%s '%s' " % (f.ftype, f.fname) for f in self.features.all()]
+        feature_cmd = ' '.join(feature_cmds)
+        kml_cmds = ["--kml '%s|%s' " % (k.fname, k.furl) for k in self.kmls.all()]
+        kml_cmd = ' '.join(kml_cmds)
         cmd = """create-madrona-project.py \
             --project '%(project)s' \
             --app '%(app)s' \
             --domain '%(domain)s' \
             --connection "%(connection)s" \
             --studyregion '%(wkt)s' \
-            --kml '%(public_kml_path)s' \
+            --kml '%(kmls)s' \
             %(features)s
         """  % {'project': self.project,
                 'app': self.app,
                 'domain': self.domain,
                 'connection': self.connection,
                 'wkt': self.studyregion.ewkt,
-                'public_kml_path': self.write_public_kml(),
+                'kmls': kml_cmd,
                 'features': feature_cmd}
 
         return cmd
