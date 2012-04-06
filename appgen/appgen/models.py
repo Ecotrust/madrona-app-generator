@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from madrona.common.utils import cachemethod
 
 class AppConfig(models.Model):
     app = models.CharField(verbose_name="App name", max_length=35)
@@ -6,7 +7,6 @@ class AppConfig(models.Model):
     studyregion = models.PolygonField()
     features = models.ManyToManyField('UserFeature')
     kmls = models.ManyToManyField('BaseKml')
-    ip = models.IPAddressField()
     objects = models.GeoManager()
 
     class Meta:
@@ -94,12 +94,21 @@ class AppConfig(models.Model):
         """
         TODO determine IP dynamically?
         """
-        return "%s:%d" % (self.ip, self.port)
+        return "%s:%d" % (self.url_or_ip, self.port)
+
+    @property
+    @cachemethod("AppConfig_get_ip")
+    def url_or_ip(self):
+        # from http://commandline.org.uk/python/how-to-find-out-ip-address-in-python/
+        import socket
+        #getNetworkIp():
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('ecotrust.org', 0))
+        return s.getsockname()[0]
 
     @property
     def port(self):
-        # TODO
-        return 8080
+        return 8000 + self.pk
 
     @property
     def connection(self):
@@ -119,11 +128,17 @@ class AppConfig(models.Model):
         serv = '<pre>'+self.serv_command()+'</pre>'
         return db + create + serv
 
+    @property
+    def appslug(self):
+        from django.template.defaultfilters import slugify
+        s = slugify(self.app)
+        return s.replace('-','_')
+
     def db_command(self):
-        return "createdb %s -U madrona" % self.app  # TODO slug
+        return "createdb %s -U madrona" % self.appslug
 
     def serv_command(self):
-        return "python /usr/local/apps/%s/%s/manage.py runserver 0.0.0.0:%s" % (self.app, self.app, self.port)  # TODO slug
+        return "python /usr/local/apps/%s/%s/manage.py runserver 0.0.0.0:%s" % (self.appslug, self.appslug, self.port)
 
     def create_command(self):
         feature_cmds = ["--%s '%s' " % (f.ftype, f.fname) for f in self.features.all()]
@@ -170,3 +185,4 @@ class BaseKml(models.Model):
     fname = models.CharField(verbose_name="KML Name", max_length=65)
     fdesc = models.TextField(verbose_name="Description")
     furl = models.URLField(verbose_name="URL")
+
