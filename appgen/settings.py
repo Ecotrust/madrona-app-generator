@@ -1,3 +1,4 @@
+import os
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -103,8 +104,17 @@ LOGGING = {
     }
 }
 
+ACTIVEAPP_DIR = '/usr/local/apps/active'
+USERAPP_DIR = '/usr/local/userapps'
+base = os.path.abspath(os.path.join(ACTIVEAPP_DIR,'..'))
+if not os.path.exists(base):
+    raise Exception("can't find directory " + base)
+if not os.path.exists(USERAPP_DIR):
+    raise Exception("can't find directory " + USERAPP_DIR)
+
 try:
     from settings_local import *
 except ImportError:
     pass
+
 

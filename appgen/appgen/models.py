@@ -1,5 +1,5 @@
 from django.contrib.gis.db import models
-from madrona.common.utils import cachemethod
+#from madrona.common.utils import cachemethod
 
 class AppConfig(models.Model):
     app = models.CharField(verbose_name="App name", max_length=35)
@@ -48,16 +48,32 @@ class AppConfig(models.Model):
         """ % (self.pk, self.domain)
 
         """
-         WE DONT PROVIDE AND EDIT LINK !
+         WE DONT PROVIDE AN EDIT LINK !
          because the code is generated once, its a one shot deal
             <li><a href="/admin/appgen/appconfig/%d/" class="changelink"> Edit </a></li>
         """
 
+    def save(self, *args, **kwargs):
+        # TODO write app 
+        print self.db_command()
+        print self.create_command()
+        # TODO sanity checks or raise Exception
+        super(AppConfig, self).save(*args, **kwargs) #
+
+    @property
+    def running(self):
+        pth = os.path.join(settings.ACTIVEAPP_DIR, '.pk')
+        try:
+            pk = int(open(pth).read().strip())
+            if pk == self.pk:
+                return True
+        except:
+            pass
+        return False
 
     @property
     def status(self):
-        running = False  # TODO
-        if running:
+        if self.running:
             msg = """
             <div>
             <p>Status: <br/> Server is running <br/> (<em>12:03pm</em>)</p>
@@ -97,7 +113,7 @@ class AppConfig(models.Model):
         return "%s:%d" % (self.url_or_ip, self.port)
 
     @property
-    @cachemethod("AppConfig_get_ip")
+    #@cachemethod("AppConfig_get_ip")
     def url_or_ip(self):
         # from http://commandline.org.uk/python/how-to-find-out-ip-address-in-python/
         import socket
@@ -125,8 +141,7 @@ class AppConfig(models.Model):
     def command_html(self):
         create = '<pre>'+self.create_command()+'</pre>'
         db = '<pre>'+self.db_command()+'</pre>'
-        serv = '<pre>'+self.serv_command()+'</pre>'
-        return db + create + serv
+        return db + create
 
     @property
     def appslug(self):
@@ -136,9 +151,6 @@ class AppConfig(models.Model):
 
     def db_command(self):
         return "createdb %s -U madrona" % self.appslug
-
-    def serv_command(self):
-        return "python /usr/local/apps/%s/%s/manage.py runserver 0.0.0.0:%s" % (self.appslug, self.appslug, self.port)
 
     def create_command(self):
         feature_cmds = ["--%s '%s' " % (f.ftype, f.fname) for f in self.features.all()]
