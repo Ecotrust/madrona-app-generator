@@ -1,8 +1,10 @@
 from django.contrib.gis.db import models
-#from madrona.common.utils import cachemethod
+import os
+from madrona.common.utils import cachemethod
+from django.conf import settings
 
 class AppConfig(models.Model):
-    app = models.CharField(verbose_name="App name", max_length=35)
+    app = models.CharField(verbose_name="App name", max_length=35, unique=True)
     desc = models.TextField(verbose_name="Description")
     studyregion = models.PolygonField()
     features = models.ManyToManyField('UserFeature')
@@ -18,7 +20,7 @@ class AppConfig(models.Model):
 
     @property
     def project(self):
-        return "exampleproject"
+        return "%s_project" % self.appslug
 
     @property
     def data_list(self):
@@ -42,10 +44,9 @@ class AppConfig(models.Model):
         </style>
         <div style="width:100px !important;">
             <p><a href="/admin/appgen/appconfig/%d/delete/" class="deletelink"> Delete </a></p>
-            <p><a href="http://%s" class="golink"> Go to App </a></p>
             <p><a href="http://ecotrust.github.com/madrona/docs/tutorial.html" target="_blank" class="changelink"> Customize </a></p>
         </div>
-        """ % (self.pk, self.domain)
+        """ % (self.pk)
 
         """
          WE DONT PROVIDE AN EDIT LINK !
@@ -53,48 +54,89 @@ class AppConfig(models.Model):
             <li><a href="/admin/appgen/appconfig/%d/" class="changelink"> Edit </a></li>
         """
 
-    def save(self, *args, **kwargs):
-        # TODO write app 
-        print self.db_command()
-        print self.create_command()
-        # TODO sanity checks or raise Exception
-        super(AppConfig, self).save(*args, **kwargs) #
-
     @property
     def running(self):
-        pth = os.path.join(settings.ACTIVEAPP_DIR, '.pk')
+        dest_dir = os.path.join(settings.USERAPP_DIR, self.project)
+        # check that dest_dir is symlinked to ACTIVEAPP_DIR
+        if os.path.realpath(dest_dir) == os.path.realpath(settings.ACTIVEAPP_DIR): 
+            return True
+
+        return False
+
+    @property
+    def initialized(self):
+        # Test for dir
+        dest_dir = os.path.join(settings.USERAPP_DIR, self.project)
+        if not os.path.exists(dest_dir):
+            print dest_dir + " does not exist!"
+            return False
+
+        # Test for DB
+        import psycopg2
         try:
-            pk = int(open(pth).read().strip())
-            if pk == self.pk:
-                return True
+            conn = psycopg2.connect(self.connection)
+            cursor = conn.cursor()
+            cursor.execute("SELECT PostGIS_Version();")
+            records = cursor.fetchone()
         except:
-            pass
+            print "Database does not exist: ", self.connection
+            return False
+
+        # All good
+        return True
+
+    def cleanup(self):
+        # drop db, remove code dir
+        from appgen.views import _call
+        cmd = self.db_command()
+        cmd = cmd.replace('createdb','dropdb')
+        out, code = _call(cmd)
+
+        # rm code dir
+        dest_dir = os.path.join(settings.USERAPP_DIR, self.project)
+        import shutil
+        shutil.rmtree(dest_dir)
         return False
 
     @property
     def status(self):
-        if self.running:
+        init = self.initialized
+        print "init?", init
+        running = self.running
+        print "running?", running
+
+        msg = "Unknown status"
+
+        if running and init:
             msg = """
             <div>
-            <p>Status: <br/> Server is running <br/> (<em>12:03pm</em>)</p>
+            <p>Status: <br/> <strong>Active</strong> </p>
+            </div>
+            <br/><br/>
+            <p><a href="http://%s" class="golink"> Go to App </a></p>
+            """ % self.domain
+        elif init and not running:
+            msg = """
+            <div>
+            <p>Status: <br/> Initialized but not active </p>
             </div>
             <br/><br/>
             <ul class="object-tools">
-                <li><a href="/reload/%d/" class="tablelink"> Stop </a></li>
+                <li><a href="/activate/%d/" class="tablelink"> Activate App </a></li>
             </ul>
             """ % self.pk
-        else:
+        elif not init and not running:
             msg = """
             <div>
-            <p>Status: <br/> Not Running <br/> (<em>12:03pm</em>)</p>
+            <p>Status: <br/> Not initialized </p>
             </div>
             <br/><br/>
             <ul class="object-tools">
-                <li><a href="/reload/%d/" class="tablelink"> Start </a></li>
+                <li><a href="/initialize/%d/" class="tablelink"> Initialize </a></li>
             </ul>
             """ % self.pk
-            
-            return msg
+
+        return msg
 
     @property
     def wms(self): 
@@ -107,13 +149,14 @@ class AppConfig(models.Model):
 
     @property
     def domain(self):
-        """
-        TODO determine IP dynamically?
-        """
-        return "%s:%d" % (self.url_or_ip, self.port)
+        port = settings.ACTIVEAPP_PORT
+        if port == 80:
+            return "%s" % (self.url_or_ip)
+        else:
+            return "%s:%d" % (self.url_or_ip, port)
 
     @property
-    #@cachemethod("AppConfig_get_ip")
+    @cachemethod("AppConfig_get_ip")
     def url_or_ip(self):
         # from http://commandline.org.uk/python/how-to-find-out-ip-address-in-python/
         import socket
@@ -123,15 +166,11 @@ class AppConfig(models.Model):
         return s.getsockname()[0]
 
     @property
-    def port(self):
-        return 8000 + self.pk
-
-    @property
     def connection(self):
         '''
         Assumes db has already been created, postgis installed, user set up with local trust, etc
         '''
-        return "dbname='example' user='madrona'"
+        return "dbname='%s' user='%s'" % (self.appslug, self.dbuser)
 
     @property
     def public_kml(self):
@@ -149,23 +188,30 @@ class AppConfig(models.Model):
         s = slugify(self.app)
         return s.replace('-','_')
 
+    @property
+    def dbuser(self):
+        return 'madrona'
+
     def db_command(self):
-        return "createdb %s -U madrona" % self.appslug
+        return "createdb %s -U %s" % (self.appslug, self.dbuser)
 
     def create_command(self):
         feature_cmds = ["--%s '%s' " % (f.ftype, f.fname) for f in self.features.all()]
         feature_cmd = ' '.join(feature_cmds)
         kml_cmds = ["--kml '%s|%s' " % (k.fname, k.furl) for k in self.kmls.all()]
         kml_cmd = ' '.join(kml_cmds)
-        cmd = """create-madrona-project.py 
-            --project '%(project)s' 
-            --app '%(app)s' 
-            --domain '%(domain)s' 
-            --connection "%(connection)s" 
-            --studyregion '%(wkt)s' 
-            %(kmls)s 
-            %(features)s
-        """  % {'project': self.project,
+        cmd = """create-madrona-project.py \
+            --outdir '%(outdir)s' \
+            --project '%(project)s' \
+            --app '%(app)s' \
+            --domain '%(domain)s' \
+            --connection "%(connection)s"  \
+            --studyregion '%(wkt)s' \
+            %(kmls)s \
+            %(features)s \
+            --superuser
+        """  % {'outdir': os.path.join(settings.USERAPP_DIR, self.project),
+                'project': self.project,
                 'app': self.app,
                 'domain': self.domain,
                 'connection': self.connection,
