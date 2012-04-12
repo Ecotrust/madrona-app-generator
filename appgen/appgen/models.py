@@ -101,9 +101,7 @@ class AppConfig(models.Model):
     @property
     def status(self):
         init = self.initialized
-        print "init?", init
         running = self.running
-        print "running?", running
 
         msg = "Unknown status"
 
@@ -122,7 +120,7 @@ class AppConfig(models.Model):
             </div>
             <br/><br/>
             <ul class="object-tools">
-                <li><a href="/activate/%d/" class="tablelink"> Activate App </a></li>
+                <li><a href="/activate/%d/" class="tablelink"> Activate </a></li>
             </ul>
             """ % self.pk
         elif not init and not running:
