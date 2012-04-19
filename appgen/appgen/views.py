@@ -1,7 +1,7 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext, Context
-from appgen.models import AppConfig
+from appgen.models import AppConfig, get_ip
 from appgen.forms import AppConfigForm
 from django.contrib.auth.decorators import login_required
 import os
@@ -89,3 +89,25 @@ def activate(request, pk):
 
     os.symlink(src, dest)
     return HttpResponseRedirect('/admin/appgen/appconfig/')
+
+@login_required
+def delete(request, pk): 
+    try:
+        app = AppConfig.objects.get(pk=pk)
+    except AppConfig.DoesNotExist:
+        return HttpReponse("Doesn't exist", status=404)
+
+    app.cleanup()
+    app.delete()
+    return HttpResponseRedirect('/admin/appgen/appconfig/')
+
+def initial_docs(request):
+    url = "http://%s:%d" % (settings.ACTIVEAPP_DOMAIN, settings.ACTIVEAPP_PORT)
+    ip = get_ip()
+    context = {
+     'active_app_url': url,
+     'domain': settings.ACTIVEAPP_DOMAIN,
+     'ip': ip
+    }
+    c = RequestContext(request, context)
+    return render_to_response("initial_docs.html", c)

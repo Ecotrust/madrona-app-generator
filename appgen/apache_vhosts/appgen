@@ -1,0 +1,17 @@
+<VirtualHost *:80>
+  WSGIScriptAlias / /usr/local/src/madrona-app-generator/appgen/appgen/wsgi.py
+  WSGIDaemonProcess appgen user=www-data group=www-data threads=1 processes=1
+  WSGIProcessGroup appgen
+
+  ErrorLog "/var/log/apache2/appgen-error.log"
+  CustomLog "/var/log/apache2/appgen-access.log" combined
+
+  Alias /static /usr/local/lib/python2.7/dist-packages/Django-1.4-py2.7.egg/django/contrib/admin/static
+
+  <Directory />
+    Options FollowSymLinks
+    AllowOverride None
+  </Directory>
+
+</VirtualHost>
+

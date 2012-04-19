@@ -3,6 +3,13 @@ import os
 from madrona.common.utils import cachemethod
 from django.conf import settings
 
+def get_ip():
+    # from http://commandline.org.uk/python/how-to-find-out-ip-address-in-python/
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('ecotrust.org', 0))
+    return s.getsockname()[0]
+
 class AppConfig(models.Model):
     app = models.CharField(verbose_name="App name", max_length=35, unique=True)
     desc = models.TextField(verbose_name="Description")
@@ -43,7 +50,7 @@ class AppConfig(models.Model):
         }
         </style>
         <div style="width:100px !important;">
-            <p><a href="/admin/appgen/appconfig/%d/delete/" class="deletelink"> Delete </a></p>
+            <p><a href="/delete/%d/" class="deletelink"> Delete </a></p>
             <p><a href="http://ecotrust.github.com/madrona/docs/tutorial.html" target="_blank" class="changelink"> Customize </a></p>
         </div>
         """ % (self.pk)
@@ -111,7 +118,7 @@ class AppConfig(models.Model):
             <p>Status: <br/> <strong>Active</strong> </p>
             </div>
             <br/><br/>
-            <p><a href="http://%s" class="golink"> Go to App </a></p>
+            <p><a href="http://%s" class="golink" target="_blank"> Go to App </a></p>
             """ % self.domain
         elif init and not running:
             msg = """
@@ -149,19 +156,9 @@ class AppConfig(models.Model):
     def domain(self):
         port = settings.ACTIVEAPP_PORT
         if port == 80:
-            return "%s" % (self.url_or_ip)
+            return "%s" % (settings.ACTIVEAPP_DOMAIN)
         else:
-            return "%s:%d" % (self.url_or_ip, port)
-
-    @property
-    @cachemethod("AppConfig_get_ip")
-    def url_or_ip(self):
-        # from http://commandline.org.uk/python/how-to-find-out-ip-address-in-python/
-        import socket
-        #getNetworkIp():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('ecotrust.org', 0))
-        return s.getsockname()[0]
+            return "%s:%d" % (settings.ACTIVEAPP_DOMAIN, port)
 
     @property
     def connection(self):

@@ -3,7 +3,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'appgen',
-        'USER': 'postgres',
+        'USER': 'madrona',
      }
 }
 
@@ -99,8 +99,10 @@ LOGGING = {
 }
 
 ACTIVEAPP_DIR = '/usr/local/userapps/__active__'
-ACTIVEAPP_PORT = 7988
+ACTIVEAPP_PORT = 81
+ACTIVEAPP_DOMAIN = 'madrona'
 USERAPP_DIR = '/usr/local/userapps'
+LOGIN_URL = '/'
 base = os.path.abspath(os.path.join(ACTIVEAPP_DIR,'..'))
 if not os.path.exists(base):
     raise Exception("can't find directory " + base)
@@ -111,5 +113,3 @@ try:
     from settings_local import *
 except ImportError:
     pass
-
-
