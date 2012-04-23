@@ -1,11 +1,21 @@
 <html>
 <head>
  <title> Welcome to Madrona VM </title>
+ <style>
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        line-height: 28px;
+        color: #52431f;
+        background-color: #f9d491;
+    }
+ </style>
+
 </head>
 <body>
 <h1>Welcome to the Madrona Virtual Machine</h1>
 <div>
-To get started please minimize the virtual machine window and
+    To get started, we'll need to set up your system to recognize the virutal machine by the domain name <em>madrona</em>. 
 <ol>
 <li> <h3> Set up your hosts file to point to the IP address of the virtual machine </h3>
 <h4> Windows </h4>
@@ -14,9 +24,14 @@ To get started please minimize the virtual machine window and
 <li> Open the <code>hosts</code> file for editing (may require admin privledges)</li>
 <li> Add the following line to the end of the file and save. <br/> <code>{{ip}}  {{domain}}</code> </li>
 </ul>
+<h4> Mac OSX or Linux </h4>
+<ul>
+<li> Open the <code>/etc/hosts</code> file for editing (may require root privledges)</li>
+<li> Add the following line to the end of the file and save. <br/> <code>{{ip}}  {{domain}}</code> </li>
+</ul>
 </li>
 <li>
-<h3>Visit <code>{{appgen_url}}</code> in your host web browser </h3>
+<h3>Visit <code style="text-decoration: underline;">{{appgen_url}}</code> in your web browser to begin. </h3>
 </li>
 </ol>
 
