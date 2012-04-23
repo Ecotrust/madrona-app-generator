@@ -102,10 +102,10 @@ def delete(request, pk):
     return HttpResponseRedirect('/admin/appgen/appconfig/')
 
 def initial_docs(request):
-    url = "http://%s:%d" % (settings.ACTIVEAPP_DOMAIN, settings.ACTIVEAPP_PORT)
+    url = "http://%s/" % (settings.ACTIVEAPP_DOMAIN)
     ip = get_ip()
     context = {
-     'active_app_url': url,
+     'appgen_url': url,
      'domain': settings.ACTIVEAPP_DOMAIN,
      'ip': ip
     }
