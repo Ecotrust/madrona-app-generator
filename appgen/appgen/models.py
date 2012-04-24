@@ -27,7 +27,11 @@ class AppConfig(models.Model):
 
     @property
     def project(self):
-        return "%s_project" % self.appslug
+        return "%sDemoProject" % self.appslug
+
+    @property
+    def full_project(self):
+        return "%s Demo Project" % self.app
 
     @property
     def data_list(self):
@@ -184,7 +188,7 @@ class AppConfig(models.Model):
     def appslug(self):
         from django.template.defaultfilters import slugify
         s = slugify(self.app)
-        return s.replace('-','_')
+        return s.replace('-','')
 
     @property
     def dbuser(self):
@@ -209,7 +213,7 @@ class AppConfig(models.Model):
             %(features)s \
             --superuser
         """  % {'outdir': os.path.join(settings.USERAPP_DIR, self.project),
-                'project': self.project,
+                'project': self.full_project,
                 'app': self.app,
                 'domain': self.domain,
                 'connection': self.connection,
