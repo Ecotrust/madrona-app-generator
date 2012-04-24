@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 import os
 from madrona.common.utils import cachemethod
 from django.conf import settings
+import unicodedata
 
 def get_ip():
     # from http://commandline.org.uk/python/how-to-find-out-ip-address-in-python/
@@ -213,8 +214,8 @@ class AppConfig(models.Model):
             %(features)s \
             --superuser
         """  % {'outdir': os.path.join(settings.USERAPP_DIR, self.project),
-                'project': self.full_project,
-                'app': self.app,
+                'project': unicodedata.normalize('NFKD', self.full_project).encode('ascii','ignore'),
+                'app': unicodedata.normalize('NFKD', self.app).encode('ascii','ignore'),
                 'domain': self.domain,
                 'connection': self.connection,
                 'wkt': self.studyregion.ewkt,
