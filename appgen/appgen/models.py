@@ -102,7 +102,10 @@ class AppConfig(models.Model):
         # rm code dir
         dest_dir = os.path.join(settings.USERAPP_DIR, self.project)
         import shutil
-        shutil.rmtree(dest_dir)
+        try:
+            shutil.rmtree(dest_dir)
+        except OSError:
+            pass
         return False
 
     @property
