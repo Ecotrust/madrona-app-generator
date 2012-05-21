@@ -145,7 +145,7 @@ class AppConfig(models.Model):
             </div>
             <br/><br/>
             <ul class="object-tools">
-                <li><a href="/initialize/%d/" class="tablelink"> Initialize </a></li>
+                <li><a href="/initialize/%d/" class="tablelink initialize"> Initialize </a></li>
             </ul>
             """ % self.pk
 
